@@ -1,4 +1,4 @@
-import uuid
+import uuid, secrets
 from datetime import datetime
 from sqlalchemy import (
     create_engine,
@@ -14,7 +14,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import declarative_base, relationship
 from pgvector.sqlalchemy import Vector
-
+from sqlalchemy import Text
+from sqlalchemy.dialects.postgresql import JSONB
 Base = declarative_base()
 
 class Conversation(Base):
@@ -67,3 +68,44 @@ class CausalLink(Base):
     type = Column(String(50), nullable=False)
     inferred_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     verified = Column(Boolean, default=False)
+class ProceduralMemory(Base):
+    __tablename__ = "procedural_memories"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    task_description = Column(String, nullable=False, index=True)
+    task_embedding = Column(Vector(1536), nullable=False)
+    
+    # The successful plan, stored as JSON.
+    # Example: {"steps": [{"operation": "RECALL_EPISODIC", "parameters": {"query": "..."}}]}
+    cognitive_plan = Column(JSONB, nullable=False)
+    
+    success_criteria = Column(Text)
+    usage_count = Column(Integer, default=0, nullable=False)
+    last_used = Column(DateTime)
+    
+    # For quick semantic lookups, e.g., ["summary", "project_phoenix"]
+    related_concepts = Column(ARRAY(String))
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    def __repr__(self):
+        return f"<ProceduralMemory(task='{self.task_description[:30]}...')>"
+
+class RawObservation(Base):
+    __tablename__ = "raw_observations"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source = Column(String(255), nullable=False, index=True)
+    data = Column(Text, nullable=False)
+    meta_data = Column(JSONB) # Using JSONB for better query performance
+    status = Column(String(50), default="pending", nullable=False, index=True)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    processed_at = Column(DateTime)
+
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255))
+    # API keys should be indexed for fast lookups
+    api_key = Column(String(255), unique=True, nullable=False, index=True, default=lambda: secrets.token_urlsafe(32))
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from db.database import get_db
-from core.consolidation import consolidation_engine
+from core.consolidation import memory_ingestor # Import the new ingestor
 
 router = APIRouter()
 
@@ -16,36 +16,40 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     conversation_id: str
     assistant_message: str
-    interaction_id: str
+    observation_id: str
 
 @router.post("/chat", response_model=ChatResponse)
 def handle_chat(request: ChatRequest, db: Session = Depends(get_db)):
     """
-    Simulates a chat interaction and triggers the consolidation engine.
+    Handles a chat request, gets a mocked response, and logs the interaction
+    as an observation for asynchronous processing.
     """
-    # If no conversation_id is provided, create a new one
     conversation_id = request.conversation_id or str(uuid.uuid4())
-
-    # In a real app, this is where the LLM would generate a response.
-    # For now, we'll just mock a response.
-    assistant_response = f"This is a mocked response to: '{request.message}'"
+    
+    # Mock LLM response generation
+    assistant_response = f"Mocked response to '{request.message}'"
 
     try:
-        # This is the core logic: trigger consolidation
-        interaction = consolidation_engine.consolidate_interaction(
+        # The metadata needed by the consolidation task
+        observation_meta = {
+            "conversation_id": conversation_id,
+            "user_id": request.user_id,
+            "user_message": request.message,
+            "assistant_message": assistant_response,
+        }
+
+        # Use the new ingestor to observe the interaction
+        observation = memory_ingestor.observe(
             db=db,
-            conversation_id=conversation_id,
-            user_id=request.user_id,
-            user_message=request.message,
-            assistant_message=assistant_response,
+            source="user_chat",
+            data=f"User: {request.message}\nAssistant: {assistant_response}",
+            meta_data=observation_meta
         )
-        
+
         return ChatResponse(
             conversation_id=conversation_id,
             assistant_message=assistant_response,
-            interaction_id=str(interaction.id)
+            observation_id=str(observation.id)
         )
     except Exception as e:
-        # Rollback in case of error
-        db.rollback()
         raise HTTPException(status_code=500, detail=f"An error occurred: {str(e)}")

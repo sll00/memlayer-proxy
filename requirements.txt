@@ -6,7 +6,7 @@ uvicorn[standard]
 sqlalchemy
 psycopg2-binary
 pgvector
-
+requests
 # Neo4j
 neo4j
 greenlet
