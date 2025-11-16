@@ -117,8 +117,8 @@ package-dir = {"" = "."}
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["memory_bank*"]
+include = ["memlayer*"]
 exclude = ["tests*", "examples*", "docs*", "*.egg-info*", "__pycache__*"]
 
 [tool.setuptools.package-data]
-memory_bank = ["py.typed"]
+memlayer = ["py.typed"]
