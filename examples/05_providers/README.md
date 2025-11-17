@@ -11,21 +11,21 @@ Choose your provider and run the corresponding example:
 export OPENAI_API_KEY='sk-...'
 python examples/05_providers/openai_example.py
 ```
-**Models**: gpt-4, gpt-4-turbo, gpt-4o, gpt-4o-mini, gpt-3.5-turbo
+**Models**: gpt-5, gpt-4.1, gpt-4.1-mini
 
 ### Claude (Anthropic)
 ```bash
 export ANTHROPIC_API_KEY='sk-ant-...'
 python examples/05_providers/claude_example.py
 ```
-**Models**: claude-3-5-sonnet, claude-3-5-haiku, claude-3-opus
+**Models**: claude-4-5-sonnet, claude-4-5-haiku, claude-4-opus
 
 ### Google Gemini
 ```bash
 export GOOGLE_API_KEY='...'
 python examples/05_providers/gemini_example.py
 ```
-**Models**: gemini-2.0-flash-exp, gemini-1.5-pro, gemini-1.5-flash
+**Models**: gemini-2.5-flash-lite, gemini-2.5-pro, gemini-2.5-flash
 
 ### Ollama (Local)
 ```bash

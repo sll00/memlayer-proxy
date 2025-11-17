@@ -361,24 +361,33 @@ Total (non-blocking)       ~0ms       User doesn't wait!
 
 ##  Documentation
 
-- **Examples**: [examples/README.md](examples/README.md) - Comprehensive examples
-- **Providers**: [examples/05_providers/README.md](examples/05_providers/README.md) - Provider comparison
-- **Salience Modes**: [docs/SALIENCE_MODES.md](docs/SALIENCE_MODES.md) - Memory filtering details
-- **Tests**: [tests/README.md](tests/README.md) - Running tests and benchmarks
+### Getting Started
+- **[Basics Overview](docs/basics/overview.md)** - Architecture, components, and how MemLayer works
+- **[Quickstart Guide](docs/basics/quickstart.md)** - Get up and running in 5 minutes
+- **[Streaming Mode](docs/basics/streaming.md)** - Complete guide to streaming responses
+
+### Provider Setup
+- **[Providers Overview](docs/providers/README.md)** - Compare all providers, choose the right one
+- **[Ollama Setup](docs/providers/ollama.md)** - Run completely offline with local models
+- **[OpenAI](docs/providers/openai.md)** - OpenAI configuration
+- **[Claude](docs/providers/claude.md)** - Anthropic Claude setup
+- **[Gemini](docs/providers/gemini.md)** - Google Gemini configuration
+
+### Examples
+- **[Examples Index](examples/README.md)** - Comprehensive examples by category
+- **[Provider Examples](examples/05_providers/README.md)** - Provider comparison and usage
 
 ##  Tunable features (quick index)
 
 The project exposes several runtime/configuration knobs you can tune to match latency, cost, and accuracy trade-offs. Detailed docs for each area live in the `docs/` folder:
 
-- `docs/tuning/operation_mode.md` — How to choose between `online`, `local`, and `lightweight` modes and the effect on storage and embeddings.
-- `docs/tuning/intervals.md` — Scheduler and curation interval configuration (`scheduler_interval_seconds`, `curation_interval_seconds`) and practical guidance.
-- `docs/tuning/salience_threshold.md` — How to adjust `salience_threshold` and expected behavior.
-- `docs/services/consolidation.md` — Consolidation pipeline internals and how to call it programmatically (including `update_from_text`).
-- `docs/services/curation.md` — How memory curation works, archiving rules, and how to run/stop the curation service.
-- `docs/storage/chroma.md` — ChromaDB notes: metadata types, connection handling, and Windows file-lock guidance.
-- `docs/storage/networkx.md` — Knowledge graph persistence, expected node schemas, and backup/restore tips.
-- `docs/providers/` — Provider-specific notes for OpenAI, Claude, Gemini, and Ollama (`docs/providers/README.md` links to individual provider pages).
-- `docs/examples/README.md` — Index of important examples and how to run them (includes `examples/06_api/direct_knowledge_ingestion.py`).
+- **[docs/tuning/operation_mode.md](docs/tuning/operation_mode.md)** — **Architecture deep dive**: How to choose between `online`, `local`, and `lightweight` modes, performance implications, storage composition, and deployment strategies.
+- **[docs/tuning/intervals.md](docs/tuning/intervals.md)** — Scheduler and curation interval configuration (`scheduler_interval_seconds`, `curation_interval_seconds`) and practical guidance.
+- **[docs/tuning/salience_threshold.md](docs/tuning/salience_threshold.md)** — How to adjust `salience_threshold` and expected behavior.
+- **[docs/services/consolidation.md](docs/services/consolidation.md)** — Consolidation pipeline internals and how to call it programmatically (including `update_from_text`).
+- **[docs/services/curation.md](docs/services/curation.md)** — How memory curation works, archiving rules, and how to run/stop the curation service.
+- **[docs/storage/chroma.md](docs/storage/chroma.md)** — ChromaDB notes: metadata types, connection handling, and Windows file-lock guidance.
+- **[docs/storage/networkx.md](docs/storage/networkx.md)** — Knowledge graph persistence, expected node schemas, and backup/restore tips.
 
 Use the docs when tuning for production. The following `docs/` files were added to this repository and provide detailed, practical guidance.
 

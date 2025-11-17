@@ -35,7 +35,7 @@ class Gemini(BaseLLMWrapper):
         
         client = Gemini(
             api_key="your-api-key",
-            model="gemini-2.0-flash-exp",
+            model="gemini-2.5-flash-lite",
             storage_path="./my_memories",
             user_id="user_123"
         )
@@ -48,7 +48,7 @@ class Gemini(BaseLLMWrapper):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: str = "gemini-2.0-flash-exp",
+        model: str = "gemini-2.5-flash-lite",
         temperature: float = 0.7,
         storage_path: str = "./memlayer_data",
         user_id: str = "default_user",
@@ -64,7 +64,7 @@ class Gemini(BaseLLMWrapper):
         
         Args:
             api_key: Google API key (if None, will use GOOGLE_API_KEY env var)
-            model: Model name to use (e.g., "gemini-2.0-flash-exp", "gemini-1.5-pro")
+            model: Model name to use (e.g., "gemini-2.5-flash-lite", "gemini-2.5-pro")
             temperature: Sampling temperature (0.0 to 1.0)
             storage_path: Path where memories will be stored
             user_id: Unique identifier for the user
@@ -260,16 +260,17 @@ class Gemini(BaseLLMWrapper):
             )
         return self._consolidation_service
 
-    def chat(self, messages: list, **kwargs) -> str:
+    def chat(self, messages: list, stream: bool = False, **kwargs) -> str:
         """
         Send a chat completion request with memory capabilities.
         
         Args:
             messages: List of message dictionaries with 'role' and 'content'
+            stream: If True, returns a generator that yields response chunks
             **kwargs: Additional arguments for the completion
         
         Returns:
-            str: The assistant's response
+            str | Generator: The assistant's response (string if stream=False, generator if stream=True)
         """
         # Ensure curation service is started (accessing the property triggers lazy load + start)
         _ = self.curation_service
@@ -285,6 +286,10 @@ class Gemini(BaseLLMWrapper):
         # Convert messages to Gemini's content format
         contents = self._prepare_contents(messages)
         user_query = messages[-1]['content'] if messages and messages[-1]['role'] == 'user' else ""
+        
+        # Handle streaming mode
+        if stream:
+            return self._stream_chat(contents, user_query, kwargs)
 
         try:
             # 1. First call to Gemini with the tool available
@@ -402,10 +407,134 @@ class Gemini(BaseLLMWrapper):
         self.consolidation_service.consolidate(full_interaction, self.user_id)
 
         return final_response
+    
+    def _stream_chat(self, contents: list, user_query: str, config_kwargs: dict):
+        """
+        Helper method to handle streaming responses for Gemini.
+        
+        Args:
+            contents: Prepared contents for Gemini
+            user_query: The user's query for consolidation
+            config_kwargs: Configuration arguments
+            
+        Yields:
+            str: Response chunks from Gemini
+        """
+        try:
+            stream_response = self.client.models.generate_content_stream(
+                model=self.model,
+                contents=contents,
+                config=types.GenerateContentConfig(
+                    temperature=self.temperature,
+                    tools=[self.tool_schema],
+                    **config_kwargs
+                )
+            )
+            
+            full_response = ""
+            function_calls = []
+            
+            for chunk in stream_response:
+                # Handle text responses
+                if chunk.text:
+                    full_response += chunk.text
+                    yield chunk.text
+                
+                # Handle function calls
+                if chunk.candidates and chunk.candidates[0].content.parts:
+                    for part in chunk.candidates[0].content.parts:
+                        if hasattr(part, 'function_call') and part.function_call:
+                            function_calls.append(part.function_call)
+            
+            # If there were function calls, handle them
+            if function_calls:
+                contents.append(types.Content(
+                    role="model",
+                    parts=[types.Part(function_call=fc) for fc in function_calls]
+                ))
+                
+                function_responses = []
+                for function_call in function_calls:
+                    function_name = function_call.name
+                    
+                    if function_name == "search_memory":
+                        try:
+                            query = function_call.args.get("query")
+                            search_tier = function_call.args.get("search_tier", "balanced")
+                            
+                            search_output = self.search_service.search(
+                                query=query,
+                                user_id=self.user_id,
+                                search_tier=search_tier,
+                                llm_client=self
+                            )
+                            search_result_text = search_output["result"]
+                            self.last_trace = search_output["trace"]
+                            
+                            function_responses.append(types.Part(
+                                function_response=types.FunctionResponse(
+                                    name=function_name,
+                                    response={"result": search_result_text}
+                                )
+                            ))
+                        except Exception as e:
+                            print(f"Error during search_memory: {e}")
+                            function_responses.append(types.Part(
+                                function_response=types.FunctionResponse(
+                                    name=function_name,
+                                    response={"result": "Error searching memory."}
+                                )
+                            ))
+                    
+                    elif function_name == "schedule_task":
+                        try:
+                            import dateutil.parser
+                            description = function_call.args.get("task_description")
+                            due_date_str = function_call.args.get("due_date")
+                            due_timestamp = dateutil.parser.parse(due_date_str).timestamp()
+                            task_id = self.graph_storage.add_task(description, due_timestamp, self.user_id)
+                            tool_response = f"Task successfully scheduled with ID: {task_id}."
+                        except Exception as e:
+                            print(f"Error scheduling task: {e}")
+                            tool_response = "Error: Could not schedule the task."
+                        
+                        function_responses.append(types.Part(
+                            function_response=types.FunctionResponse(
+                                name=function_name,
+                                response={"result": tool_response}
+                            )
+                        ))
+                
+                contents.append(types.Content(role="user", parts=function_responses))
+                
+                # Get final response after tool execution
+                second_stream = self.client.models.generate_content_stream(
+                    model=self.model,
+                    contents=contents,
+                    config=types.GenerateContentConfig(
+                        temperature=self.temperature,
+                        **config_kwargs
+                    )
+                )
+                
+                for second_chunk in second_stream:
+                    if second_chunk.text:
+                        yield second_chunk.text
+            
+            # Consolidate after streaming completes
+            full_interaction = f"User: {user_query}\nAssistant: {full_response}"
+            self.consolidation_service.consolidate(full_interaction, self.user_id)
+                        
+        except Exception as e:
+            print(f"Error during streaming: {e}")
+            import traceback
+            traceback.print_exc()
+            yield "Sorry, I encountered an error while streaming the response."
 
     def analyze_and_extract_knowledge(self, text: str) -> Dict[str, List[Dict[str, str]]]:
         """
         Extracts facts, entities, and relationships from text for the knowledge graph.
+        Uses a fast model (gemini-2.5-flash-lite) for efficient extraction.
         
         Args:
             text: The text to analyze
@@ -413,43 +542,46 @@ class Gemini(BaseLLMWrapper):
         Returns:
             Dict with keys 'facts', 'entities', and 'relationships'
         """
-        system_prompt = """
+        from datetime import datetime
+        
+        current_datetime = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p %Z")
+        
+        # Use fast flash model for extraction instead of the main model
+        extraction_model = "gemini-2.5-flash-lite"
+        
+        system_prompt = f"""
 You are a Knowledge Graph Engineer AI. Your task is to analyze text and deconstruct it into a structured knowledge graph.
+The current date and time is {current_datetime}.
 You must identify:
-1.  **facts**: A list of simple, atomic, self-contained statements.
+1.  **facts**: A list of simple, atomic statements. For each fact, assign an 'importance_score' (float 0.1-1.0) and an 'expiration_date' (ISO 8601 string or null if it doesn't expire).
 2.  **entities**: A list of key nouns (people, places, projects, concepts). Each entity should have a 'name' and a 'type'.
 3.  **relationships**: A list of connections between entities. Each relationship must have a 'subject' (entity name), a 'predicate' (the verb or connecting phrase), and an 'object' (entity name).
 
 Respond ONLY with a valid JSON object with the keys "facts", "entities", and "relationships". Ensure all values in the 'subject' and 'object' fields of the relationships correspond to a 'name' from the entities list.
 
 Example Input:
-"John, the lead engineer for Project Phoenix, confirmed that the new server deployment in the London office is complete. This server's IP is 192.168.1.101."
+"John confirmed the temporary door code is 1234 for the next 24 hours. This is for Project Phoenix, which is our top priority."
 
 Example JSON Output:
-{
+{{
   "facts": [
-    {"fact": "The new server deployment in the London office is complete."},
-    {"fact": "The IP address of the new server in the London office is 192.168.1.101."}
+    {{"fact": "The temporary door code is 1234.", "importance_score": 0.8, "expiration_date": "2025-11-18T14:30:00Z"}},
+    {{"fact": "Project Phoenix is the team's top priority.", "importance_score": 1.0, "expiration_date": null}}
   ],
   "entities": [
-    {"name": "John", "type": "Person"},
-    {"name": "Project Phoenix", "type": "Project"},
-    {"name": "London office", "type": "Location"},
-    {"name": "server deployment", "type": "Event"},
-    {"name": "192.168.1.101", "type": "IP Address"}
+    {{"name": "John", "type": "Person"}},
+    {{"name": "Project Phoenix", "type": "Project"}}
   ],
   "relationships": [
-    {"subject": "John", "predicate": "is lead engineer for", "object": "Project Phoenix"},
-    {"subject": "John", "predicate": "confirmed completion of", "object": "server deployment"},
-    {"subject": "server deployment", "predicate": "is located in", "object": "London office"}
+    {{"subject": "John", "predicate": "works on", "object": "Project Phoenix"}}
   ]
-}
+}}
 """
         prompt = f"{system_prompt}\n\nInput Text:\n{text}\n\nYour JSON Output:"
         
         try:
             response = self.client.models.generate_content(
-                model=self.model,
+                model=extraction_model,  # Use fast model, not self.model
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.0,

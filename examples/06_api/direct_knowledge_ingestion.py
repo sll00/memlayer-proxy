@@ -19,7 +19,7 @@ def main():
     # Initialize the memory-enhanced client
     client = OpenAI(
         api_key=os.getenv("OPENAI_API_KEY"),
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         storage_path="./direct_ingestion_demo",
         user_id="demo_user",
         operation_mode="online"

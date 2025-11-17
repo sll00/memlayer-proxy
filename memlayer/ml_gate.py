@@ -320,11 +320,55 @@ class SalienceGate:
         self.openai_client = OpenAI(api_key=api_key)
         print("SalienceGate (ONLINE): Using OpenAI embeddings API.")
         
-        # Pre-compute embeddings for prototypes using OpenAI API
-        print("SalienceGate (ONLINE): Pre-computing prototype embeddings...")
+        # Try to load cached prototype embeddings from disk
+        import os
+        import pickle
+        import time
+        
+        init_start = time.time()
+        cache_dir = os.path.expanduser("~/.memlayer_cache")
+        os.makedirs(cache_dir, exist_ok=True)
+        cache_file = os.path.join(cache_dir, "salience_prototypes_online.pkl")
+        
+        if os.path.exists(cache_file):
+            try:
+                print("SalienceGate (ONLINE): Loading cached prototype embeddings...")
+                load_start = time.time()
+                with open(cache_file, 'rb') as f:
+                    cache_data = pickle.load(f)
+                self.salient_embeddings = cache_data['salient']
+                self.non_salient_embeddings = cache_data['non_salient']
+                load_elapsed = time.time() - load_start
+                print(f"SalienceGate (ONLINE): Ready (loaded from cache in {load_elapsed:.2f}s).")
+            except Exception as e:
+                print(f"SalienceGate (ONLINE): Cache load failed ({e}), recomputing...")
+                self._compute_and_cache_prototype_embeddings(cache_file)
+        else:
+            print("SalienceGate (ONLINE): Pre-computing prototype embeddings...")
+            compute_start = time.time()
+            self._compute_and_cache_prototype_embeddings(cache_file)
+            compute_elapsed = time.time() - compute_start
+            print(f"SalienceGate (ONLINE): Initialization took {compute_elapsed:.2f}s")
+        
+        init_elapsed = time.time() - init_start
+        print(f"[SALIENCE] Total initialization time: {init_elapsed:.2f}s")
+    
+    def _compute_and_cache_prototype_embeddings(self, cache_file: str):
+        """Compute prototype embeddings and cache them to disk."""
         self.salient_embeddings = self._get_openai_embeddings(SALIENT_PROTOTYPES)
         self.non_salient_embeddings = self._get_openai_embeddings(NON_SALIENT_PROTOTYPES)
-        print("SalienceGate (ONLINE): Ready.")
+        
+        # Cache to disk
+        try:
+            import pickle
+            with open(cache_file, 'wb') as f:
+                pickle.dump({
+                    'salient': self.salient_embeddings,
+                    'non_salient': self.non_salient_embeddings
+                }, f)
+            print("SalienceGate (ONLINE): Ready (cached for future use).")
+        except Exception as e:
+            print(f"SalienceGate (ONLINE): Ready (cache save failed: {e}).")
     
     def _init_lightweight_mode(self):
         """Initialize LIGHTWEIGHT mode with TF-IDF keyword matching."""
@@ -508,10 +552,16 @@ class SalienceGate:
     
     def _online_is_salient(self, text: str, verbose: bool) -> bool:
         """ONLINE mode: OpenAI embeddings API."""
+        import time
+        
         # Get embedding from OpenAI API
+        embed_start = time.time()
         text_embedding = self._get_openai_embeddings([text])
+        embed_elapsed = time.time() - embed_start
+        print(f"[SALIENCE] OpenAI embedding API call took {embed_elapsed:.2f}s")
 
         # Calculate cosine similarity against prototypes
+        sim_start = time.time()
         salient_scores = self._cosine_similarity(text_embedding, self.salient_embeddings)
         max_salient_score = float(salient_scores.max())
         avg_salient_score = float(salient_scores.mean())
@@ -519,6 +569,8 @@ class SalienceGate:
         non_salient_scores = self._cosine_similarity(text_embedding, self.non_salient_embeddings)
         max_non_salient_score = float(non_salient_scores.max())
         avg_non_salient_score = float(non_salient_scores.mean())
+        sim_elapsed = time.time() - sim_start
+        print(f"[SALIENCE] Similarity calculations took {sim_elapsed:.2f}s")
 
         # Apply decision logic
         is_salient = max_salient_score > (max_non_salient_score + self.threshold)

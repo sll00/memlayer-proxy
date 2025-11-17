@@ -254,16 +254,17 @@ User query: "{user_query}"
 Your JSON response (or direct answer):
 """
 
-    def chat(self, messages: list, **kwargs) -> str:
+    def chat(self, messages: list, stream: bool = False, **kwargs) -> str:
         """
         Send a chat completion request with memory capabilities.
         
         Args:
             messages: List of message dictionaries with 'role' and 'content'
+            stream: If True, returns a generator that yields response chunks
             **kwargs: Additional arguments for the completion
         
         Returns:
-            str: The assistant's response
+            str | Generator: The assistant's response (string if stream=False, generator if stream=True)
         """
         # Ensure curation service is started (accessing the property triggers lazy load + start)
         _ = self.curation_service
@@ -275,6 +276,12 @@ Your JSON response (or direct answer):
             # Prepend the task reminders to guide the LLM's response.
             # This ensures the LLM is aware of due tasks at the start of the turn.
             messages.insert(0, {"role": "system", "content": triggered_context})
+        
+        user_query = messages[-1]['content'] if messages and messages[-1]['role'] == 'user' else ""
+        
+        # Handle streaming mode
+        if stream:
+            return self._stream_chat(messages, user_query, kwargs)
         
         # 1. First call to the LLM with the tool-use prompt
         tool_prompt = self._generate_tool_prompt(messages)
@@ -344,10 +351,139 @@ Your JSON response (or direct answer):
         self.consolidation_service.consolidate(full_interaction, self.user_id)
 
         return final_response
+    
+    def _stream_chat(self, messages: list, user_query: str, kwargs: dict):
+        """
+        Helper method to handle streaming responses for Ollama.
+        
+        Args:
+            messages: List of messages
+            user_query: The user's query for consolidation
+            kwargs: Additional arguments for the call
+            
+        Yields:
+            str: Response chunks from Ollama
+        """
+        try:
+            # First call to the LLM with the tool-use prompt
+            tool_prompt = self._generate_tool_prompt(messages)
+            
+            # Call Ollama with streaming
+            response = requests.post(
+                f"{self.host}/api/generate",
+                json={
+                    "model": self.model,
+                    "prompt": tool_prompt,
+                    "stream": True,
+                    "options": {
+                        "temperature": kwargs.get("temperature", self.temperature)
+                    }
+                },
+                stream=True
+            )
+            
+            full_response = ""
+            for line in response.iter_lines():
+                if line:
+                    chunk_data = json.loads(line)
+                    if "response" in chunk_data:
+                        text = chunk_data["response"]
+                        full_response += text
+                        
+                        # Don't yield if it looks like JSON tool call
+                        if not (full_response.strip().startswith("{") and len(full_response) < 500):
+                            yield text
+                    
+                    if chunk_data.get("done", False):
+                        break
+            
+            # Check if this was a tool call
+            try:
+                tool_call_data = json.loads(full_response)
+                tool_name = tool_call_data.get("name")
+                
+                if tool_name == "search_memory":
+                    params = tool_call_data.get("parameters", {})
+                    query = params.get("query")
+                    search_tier = params.get("search_tier", "balanced")
+                    
+                    search_output = self.search_service.search(
+                        query, self.user_id, search_tier, llm_client=self
+                    )
+                    search_result_text = search_output["result"]
+                    self.last_trace = search_output["trace"]
+                    
+                    # Stream the final response
+                    final_prompt = f"Based on the following information, please answer the user's original query.\n\nInformation:\n{search_result_text}\n\nUser Query: {user_query}"
+                    
+                    final_response = requests.post(
+                        f"{self.host}/api/generate",
+                        json={
+                            "model": self.model,
+                            "prompt": final_prompt,
+                            "stream": True,
+                            "options": {"temperature": kwargs.get("temperature", self.temperature)}
+                        },
+                        stream=True
+                    )
+                    
+                    for line in final_response.iter_lines():
+                        if line:
+                            chunk_data = json.loads(line)
+                            if "response" in chunk_data:
+                                yield chunk_data["response"]
+                            if chunk_data.get("done", False):
+                                break
+                
+                elif tool_name == "schedule_task":
+                    try:
+                        import dateutil.parser
+                        params = tool_call_data.get("parameters", {})
+                        description = params.get("task_description")
+                        due_date_str = params.get("due_date")
+                        due_timestamp = dateutil.parser.parse(due_date_str).timestamp()
+                        task_id = self.graph_storage.add_task(description, due_timestamp, self.user_id)
+                        tool_response = f"Task successfully scheduled with ID: {task_id}."
+                    except Exception as e:
+                        print(f"Error scheduling task: {e}")
+                        tool_response = "Error: Could not schedule the task."
+                    
+                    final_prompt = f"Please acknowledge to the user: {tool_response}"
+                    final_response = requests.post(
+                        f"{self.host}/api/generate",
+                        json={
+                            "model": self.model,
+                            "prompt": final_prompt,
+                            "stream": True,
+                            "options": {"temperature": kwargs.get("temperature", self.temperature)}
+                        },
+                        stream=True
+                    )
+                    
+                    for line in final_response.iter_lines():
+                        if line:
+                            chunk_data = json.loads(line)
+                            if "response" in chunk_data:
+                                yield chunk_data["response"]
+                            if chunk_data.get("done", False):
+                                break
+            
+            except json.JSONDecodeError:
+                # Not a tool call, already streamed the response
+                pass
+            
+            # Consolidate after streaming completes
+            full_interaction = f"User: {user_query}\nAssistant: {full_response}"
+            self.consolidation_service.consolidate(full_interaction, self.user_id)
+                        
+        except Exception as e:
+            print(f"Error during streaming: {e}")
+            yield "Sorry, I encountered an error while streaming the response."
 
     def analyze_and_extract_knowledge(self, text: str) -> Dict[str, List[Dict[str, str]]]:
         """
         Extracts facts, entities, and relationships from text for the knowledge graph.
+        Ollama uses the same model but with optimized parameters for extraction.
         
         Args:
             text: The text to analyze
@@ -355,37 +491,37 @@ Your JSON response (or direct answer):
         Returns:
             Dict with keys 'facts', 'entities', and 'relationships'
         """
-        system_prompt = """
+        from datetime import datetime
+        
+        current_datetime = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p %Z")
+        
+        system_prompt = f"""
 You are a Knowledge Graph Engineer AI. Your task is to analyze text and deconstruct it into a structured knowledge graph.
+The current date and time is {current_datetime}.
 You must identify:
-1.  **facts**: A list of simple, atomic, self-contained statements.
+1.  **facts**: A list of simple, atomic statements. For each fact, assign an 'importance_score' (float 0.1-1.0) and an 'expiration_date' (ISO 8601 string or null if it doesn't expire).
 2.  **entities**: A list of key nouns (people, places, projects, concepts). Each entity should have a 'name' and a 'type'.
 3.  **relationships**: A list of connections between entities. Each relationship must have a 'subject' (entity name), a 'predicate' (the verb or connecting phrase), and an 'object' (entity name).
 
 Respond ONLY with a valid JSON object with the keys "facts", "entities", and "relationships". Ensure all values in the 'subject' and 'object' fields of the relationships correspond to a 'name' from the entities list.
 
 Example Input:
-"John, the lead engineer for Project Phoenix, confirmed that the new server deployment in the London office is complete. This server's IP is 192.168.1.101."
+"John confirmed the temporary door code is 1234 for the next 24 hours. This is for Project Phoenix, which is our top priority."
 
 Example JSON Output:
-{
+{{
   "facts": [
-    {"fact": "The new server deployment in the London office is complete."},
-    {"fact": "The IP address of the new server in the London office is 192.168.1.101."}
+    {{"fact": "The temporary door code is 1234.", "importance_score": 0.8, "expiration_date": "2025-11-18T14:30:00Z"}},
+    {{"fact": "Project Phoenix is the team's top priority.", "importance_score": 1.0, "expiration_date": null}}
   ],
   "entities": [
-    {"name": "John", "type": "Person"},
-    {"name": "Project Phoenix", "type": "Project"},
-    {"name": "London office", "type": "Location"},
-    {"name": "server deployment", "type": "Event"},
-    {"name": "192.168.1.101", "type": "IP Address"}
+    {{"name": "John", "type": "Person"}},
+    {{"name": "Project Phoenix", "type": "Project"}}
   ],
   "relationships": [
-    {"subject": "John", "predicate": "is lead engineer for", "object": "Project Phoenix"},
-    {"subject": "John", "predicate": "confirmed completion of", "object": "server deployment"},
-    {"subject": "server deployment", "predicate": "is located in", "object": "London office"}
+    {{"subject": "John", "predicate": "works on", "object": "Project Phoenix"}}
   ]
-}
+}}
 """
         prompt = f"{system_prompt}\n\nInput Text:\n{text}\n\nYour JSON Output:"
         

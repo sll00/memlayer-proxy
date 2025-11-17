@@ -279,28 +279,44 @@ class ConsolidationService:
         """
         Extracts knowledge using the LLM wrapper and saves facts to vector store,
         entities and relationships to graph store. Runs in a background thread.
+        
+        OPTIMIZATION: Entire consolidation (including salience check) runs async.
         """
+        import time
+        
         # Mark consolidation as in progress
         self._consolidation_complete.clear()
         
         def _task():
+            task_start = time.time()
             if is_debug_mode():
                 print(f"[DEBUG] Background consolidation thread started for user '{user_id}'")
+            
+            # *** Salience check happens INSIDE the background thread ***
+            # This prevents blocking the main thread with API calls
+            if is_debug_mode():
+                print(f"[DEBUG] Checking salience for user '{user_id}'")
+            
+            salience_start = time.time()
+            is_salient = self.salience_gate.is_worth_saving(conversation_text)
+            salience_elapsed = time.time() - salience_start
+            print(f"[CONSOLIDATE] Salience check took {salience_elapsed:.2f}s, result: {is_salient}")
+            
+            if not is_salient:
+                if is_debug_mode():
+                    print(f"[DEBUG] Conversation not salient. Exiting consolidation thread.")
+                self._consolidation_complete.set()
+                return  # Exit thread early
+            
             print(f"Consolidating knowledge for user '{user_id}'...")
             
-            # Check if the conversation is worth saving (salience gate)
-            if is_debug_mode():
-                print(f"[DEBUG] Checking salience...")
-            if not self.salience_gate.is_worth_saving(conversation_text):
-                print("Conversation deemed not salient. Skipping consolidation.")
-                return
-            
-            if is_debug_mode():
-                print(f"[DEBUG] Salience check passed! Proceeding with extraction...")
             try:
                 # 1. Delegate knowledge extraction to the LLM wrapper
                 print("Extracting knowledge from conversation...")
+                extraction_start = time.time()
                 knowledge_graph = self.llm_client.analyze_and_extract_knowledge(conversation_text)
+                extraction_elapsed = time.time() - extraction_start
+                print(f"[CONSOLIDATE] Knowledge extraction took {extraction_elapsed:.2f}s")
                 
                 facts = knowledge_graph.get("facts", [])
                 entities = knowledge_graph.get("entities", [])
@@ -349,16 +365,38 @@ class ConsolidationService:
                 # 3. Process and save entities and relationships to the graph store
                 if entities:
                     for entity in entities:
-                        self.graph_storage.add_entity(name=entity.get("name"), node_type=entity.get("type", "Concept"))
+                        # Handle both dict and string formats
+                        if isinstance(entity, dict):
+                            entity_name = entity.get("name")
+                            entity_type = entity.get("type", "Concept")
+                        elif isinstance(entity, str):
+                            # Fallback for string-only entities
+                            entity_name = entity
+                            entity_type = "Concept"
+                        else:
+                            print(f"Warning: Unexpected entity format: {entity}")
+                            continue
+                        
+                        if entity_name:
+                            self.graph_storage.add_entity(name=entity_name, node_type=entity_type)
                     print(f"✓ Saved {len(entities)} entities to graph store.")
                 
                 if relationships:
                     for rel in relationships:
-                        self.graph_storage.add_relationship(
-                            subject_name=rel.get("subject"),
-                            predicate=rel.get("predicate"),
-                            object_name=rel.get("object")
-                        )
+                        # Handle both dict formats
+                        if isinstance(rel, dict):
+                            subject = rel.get("subject")
+                            predicate = rel.get("predicate")
+                            obj = rel.get("object")
+                            
+                            if subject and predicate and obj:
+                                self.graph_storage.add_relationship(
+                                    subject_name=subject,
+                                    predicate=predicate,
+                                    object_name=obj
+                                )
+                        else:
+                            print(f"Warning: Unexpected relationship format: {rel}")
                     print(f"✓ Saved {len(relationships)} relationships to graph store.")
                 
                 print(f"Consolidation complete for user '{user_id}'.")

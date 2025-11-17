@@ -260,17 +260,23 @@ class Claude(BaseLLMWrapper):
             )
         return self._consolidation_service
 
-    def chat(self, messages: list, **kwargs) -> str:
+    def chat(self, messages: list, stream: bool = False, **kwargs) -> str:
         """
         Send a chat completion request with memory capabilities.
         
         Args:
             messages: List of message dictionaries with 'role' and 'content'
+            stream: If True, returns a generator that yields response chunks
             **kwargs: Additional arguments for the completion (will override defaults)
         
         Returns:
-            str: The assistant's response
+            str | Generator: The assistant's response (string if stream=False, generator if stream=True)
         """
+        import time
+        
+        chat_start = time.time()
+        print(f"[CHAT] Starting chat request (streaming={stream})...")
+        
         # Ensure curation service is started (accessing the property triggers lazy load + start)
         _ = self.curation_service
         
@@ -292,12 +298,21 @@ class Claude(BaseLLMWrapper):
             "tool_choice": {"type": "auto"},
             "max_tokens": self.max_tokens,
             "temperature": self.temperature,
+            "stream": stream,  # Add streaming flag
         }
         completion_kwargs.update(kwargs)
+        
+        # Handle streaming mode
+        if stream:
+            return self._stream_chat(completion_kwargs, user_query)
 
         try:
             # 1. First call to Claude with the tool available
+            api_start = time.time()
+            print(f"[CHAT] Calling Claude API (first call)...")
             response = self.client.messages.create(**completion_kwargs)
+            api_elapsed = time.time() - api_start
+            print(f"[CHAT] Claude API responded in {api_elapsed:.2f}s")
             
             # 2. Check if the model decided to use tools
             if response.stop_reason == "tool_use":
@@ -379,7 +394,11 @@ class Claude(BaseLLMWrapper):
                 second_kwargs = {k: v for k, v in completion_kwargs.items() if k not in ['tools', 'tool_choice']}
                 second_kwargs['messages'] = messages
                 
+                print(f"[CHAT] Calling Claude API (second call after tool execution)...")
+                second_api_start = time.time()
                 second_response = self.client.messages.create(**second_kwargs)
+                second_api_elapsed = time.time() - second_api_start
+                print(f"[CHAT] Second Claude API call responded in {second_api_elapsed:.2f}s")
                 final_response = second_response.content[0].text
             else:
                 # No tool call, just a direct text response
@@ -393,11 +412,163 @@ class Claude(BaseLLMWrapper):
         full_interaction = f"User: {user_query}\nAssistant: {final_response}"
         self.consolidation_service.consolidate(full_interaction, self.user_id)
 
+        chat_elapsed = time.time() - chat_start
+        print(f"[CHAT] Total chat time: {chat_elapsed:.2f}s")
+        
         return final_response
+    
+    def _stream_chat(self, completion_kwargs: dict, user_query: str):
+        """
+        Helper method to handle streaming responses for Claude.
+        
+        Args:
+            completion_kwargs: Arguments for the completion call
+            user_query: The user's query for consolidation
+            
+        Yields:
+            str: Response chunks from Claude
+        """
+        import time
+        
+        stream_start = time.time()
+        print(f"[CHAT] Starting streaming response...")
+        
+        try:
+            api_start = time.time()
+            stream_response = self.client.messages.create(**completion_kwargs)
+            api_elapsed = time.time() - api_start
+            print(f"[CHAT] Stream initiated in {api_elapsed:.2f}s")
+            
+            full_response = ""
+            tool_uses = []
+            current_text = ""
+            chunk_count = 0
+            
+            with stream_response as stream:
+                for event in stream:
+                    if event.type == "content_block_start":
+                        if event.content_block.type == "text":
+                            current_text = ""
+                        elif event.content_block.type == "tool_use":
+                            tool_uses.append({
+                                "id": event.content_block.id,
+                                "name": event.content_block.name,
+                                "input": ""
+                            })
+                    
+                    elif event.type == "content_block_delta":
+                        if hasattr(event.delta, "text"):
+                            current_text += event.delta.text
+                            full_response += event.delta.text
+                            chunk_count += 1
+                            if chunk_count == 1:
+                                first_chunk_time = time.time() - stream_start
+                                print(f"[CHAT] First chunk received after {first_chunk_time:.2f}s")
+                            yield event.delta.text
+                        elif hasattr(event.delta, "partial_json"):
+                            if tool_uses:
+                                tool_uses[-1]["input"] += event.delta.partial_json
+                    
+                    elif event.type == "message_stop":
+                        # Handle tool calls if any
+                        if tool_uses:
+                            messages = completion_kwargs["messages"].copy()
+                            content = []
+                            
+                            if full_response:
+                                content.append({"type": "text", "text": full_response})
+                            
+                            for tool_use in tool_uses:
+                                content.append({
+                                    "type": "tool_use",
+                                    "id": tool_use["id"],
+                                    "name": tool_use["name"],
+                                    "input": json.loads(tool_use["input"])
+                                })
+                            
+                            messages.append({"role": "assistant", "content": content})
+                            
+                            # Execute tool calls
+                            tool_results = []
+                            for tool_use in tool_uses:
+                                function_name = tool_use["name"]
+                                
+                                if function_name == "search_memory":
+                                    try:
+                                        function_args = json.loads(tool_use["input"])
+                                        query = function_args.get("query")
+                                        search_tier = function_args.get("search_tier", "balanced")
+                                        
+                                        search_output = self.search_service.search(
+                                            query=query,
+                                            user_id=self.user_id,
+                                            search_tier=search_tier,
+                                            llm_client=self
+                                        )
+                                        search_result_text = search_output["result"]
+                                        self.last_trace = search_output["trace"]
+                                        
+                                        tool_results.append({
+                                            "type": "tool_result",
+                                            "tool_use_id": tool_use["id"],
+                                            "content": search_result_text
+                                        })
+                                    except Exception as e:
+                                        print(f"Error during search_memory: {e}")
+                                        tool_results.append({
+                                            "type": "tool_result",
+                                            "tool_use_id": tool_use["id"],
+                                            "content": "Error searching memory."
+                                        })
+                                
+                                elif function_name == "schedule_task":
+                                    try:
+                                        import dateutil.parser
+                                        function_args = json.loads(tool_use["input"])
+                                        description = function_args.get("task_description")
+                                        due_date_str = function_args.get("due_date")
+                                        due_timestamp = dateutil.parser.parse(due_date_str).timestamp()
+                                        task_id = self.graph_storage.add_task(description, due_timestamp, self.user_id)
+                                        tool_response = f"Task successfully scheduled with ID: {task_id}."
+                                    except Exception as e:
+                                        print(f"Error scheduling task: {e}")
+                                        tool_response = "Error: Could not schedule the task."
+                                    
+                                    tool_results.append({
+                                        "type": "tool_result",
+                                        "tool_use_id": tool_use["id"],
+                                        "content": tool_response
+                                    })
+                            
+                            messages.append({"role": "user", "content": tool_results})
+                            
+                            # Get final response after tool execution
+                            second_kwargs = {k: v for k, v in completion_kwargs.items() if k not in ['tools', 'tool_choice']}
+                            second_kwargs['messages'] = messages
+                            second_kwargs['stream'] = True
+                            
+                            second_stream = self.client.messages.create(**second_kwargs)
+                            with second_stream as second_stream_obj:
+                                for second_event in second_stream_obj:
+                                    if second_event.type == "content_block_delta" and hasattr(second_event.delta, "text"):
+                                        yield second_event.delta.text
+                        
+                        # Consolidate after streaming completes
+                        full_interaction = f"User: {user_query}\nAssistant: {full_response}"
+                        self.consolidation_service.consolidate(full_interaction, self.user_id)
+                        
+                        stream_elapsed = time.time() - stream_start
+                        print(f"[CHAT] Streaming complete. Total: {stream_elapsed:.2f}s, Chunks: {chunk_count}")
+                        break
+                        
+        except Exception as e:
+            print(f"Error during streaming: {e}")
+            yield "Sorry, I encountered an error while streaming the response."
 
     def analyze_and_extract_knowledge(self, text: str) -> Dict[str, List[Dict[str, str]]]:
         """
         Extracts facts, entities, and relationships from text for the knowledge graph.
+        Uses a fast, efficient model (claude-3-5-haiku) for extraction tasks.
         
         Args:
             text: The text to analyze
@@ -405,51 +576,63 @@ class Claude(BaseLLMWrapper):
         Returns:
             Dict with keys 'facts', 'entities', and 'relationships'
         """
-        system_prompt = """
+        import time
+        from datetime import datetime
+        
+        start_time = time.time()
+        print(f"[EXTRACTION] Starting knowledge extraction... (text length: {len(text)} chars)")
+        
+        current_datetime = datetime.now().strftime("%A, %B %d, %Y at %I:%M %p %Z")
+        
+        # Use fast model for extraction instead of the main model
+        extraction_model = "claude-3-5-haiku-20241022"  # Fast and efficient for extraction
+        
+        system_prompt = f"""
 You are a Knowledge Graph Engineer AI. Your task is to analyze text and deconstruct it into a structured knowledge graph.
+The current date and time is {current_datetime}.
 You must identify:
-1.  **facts**: A list of simple, atomic, self-contained statements.
-2.  **entities**: A list of key nouns (people, places, projects, concepts). Each entity should have a 'name' and a 'type'.
+1.  **facts**: A list of simple, atomic statements. For each fact, assign an 'importance_score' (float 0.1-1.0) and an 'expiration_date' (ISO 8601 string or null if it doesn't expire).
+2.  **entities**: A list of key nouns (people, places, projects). Each entity should have a 'name' and a 'type'.
 3.  **relationships**: A list of connections between entities. Each relationship must have a 'subject' (entity name), a 'predicate' (the verb or connecting phrase), and an 'object' (entity name).
 
-Respond ONLY with a valid JSON object with the keys "facts", "entities", and "relationships". Ensure all values in the 'subject' and 'object' fields of the relationships correspond to a 'name' from the entities list.
+Respond ONLY with a valid JSON object.
 
 Example Input:
-"John, the lead engineer for Project Phoenix, confirmed that the new server deployment in the London office is complete. This server's IP is 192.168.1.101."
+"John confirmed the temporary door code is 1234 for the next 24 hours. This is for Project Phoenix, which is our top priority."
 
 Example JSON Output:
-{
+{{
   "facts": [
-    {"fact": "The new server deployment in the London office is complete."},
-    {"fact": "The IP address of the new server in the London office is 192.168.1.101."}
+    {{"fact": "The temporary door code is 1234.", "importance_score": 0.8, "expiration_date": "2025-11-16T14:30:00Z"}},
+    {{"fact": "Project Phoenix is the team's top priority.", "importance_score": 1.0, "expiration_date": null}}
   ],
   "entities": [
-    {"name": "John", "type": "Person"},
-    {"name": "Project Phoenix", "type": "Project"},
-    {"name": "London office", "type": "Location"},
-    {"name": "server deployment", "type": "Event"},
-    {"name": "192.168.1.101", "type": "IP Address"}
+    {{"name": "John", "type": "Person"}},
+    {{"name": "Project Phoenix", "type": "Project"}}
   ],
   "relationships": [
-    {"subject": "John", "predicate": "is lead engineer for", "object": "Project Phoenix"},
-    {"subject": "John", "predicate": "confirmed completion of", "object": "server deployment"},
-    {"subject": "server deployment", "predicate": "is located in", "object": "London office"}
+    {{"subject": "John", "predicate": "works on", "object": "Project Phoenix"}}
   ]
-}
-
-Do not include any other text, explanations, or apologies. Only the JSON object.
+}}
 """
         try:
+            print(f"[EXTRACTION] Calling Claude API with model: {extraction_model}")
+            api_start = time.time()
+            
             response = self.client.messages.create(
-                model=self.model,
+                model=extraction_model,  # Use fast model
                 system=system_prompt,
                 messages=[{"role": "user", "content": text}],
                 max_tokens=2048,
                 temperature=0.0
             )
             
+            api_elapsed = time.time() - api_start
+            print(f"[EXTRACTION] Claude API call completed in {api_elapsed:.2f}s")
+            
             content = response.content[0].text
             if not content:
+                print(f"[EXTRACTION] No content in response. Total time: {time.time() - start_time:.2f}s")
                 return {"facts": [], "entities": [], "relationships": []}
 
             # Claude might sometimes wrap the JSON in ```json ... ```, so we strip it
@@ -458,16 +641,26 @@ Do not include any other text, explanations, or apologies. Only the JSON object.
             elif content.strip().startswith("```"):
                 content = content.strip()[3:-3]
 
+            parse_start = time.time()
             knowledge_graph = json.loads(content)
+            parse_elapsed = time.time() - parse_start
+            print(f"[EXTRACTION] JSON parsing completed in {parse_elapsed:.2f}s")
             
             # Basic validation to ensure keys exist
             knowledge_graph.setdefault("facts", [])
             knowledge_graph.setdefault("entities", [])
             knowledge_graph.setdefault("relationships", [])
+            for fact in knowledge_graph.get("facts", []):
+                if isinstance(fact, dict):
+                    fact.setdefault("importance_score", 0.5)
+                    fact.setdefault("expiration_date", None)
+            
+            total_elapsed = time.time() - start_time
+            print(f"[EXTRACTION] Knowledge extraction complete in {total_elapsed:.2f}s - Found {len(knowledge_graph.get('facts', []))} facts, {len(knowledge_graph.get('entities', []))} entities, {len(knowledge_graph.get('relationships', []))} relationships")
             
             return knowledge_graph
         except Exception as e:
-            print(f"An unexpected error occurred during Claude knowledge extraction: {e}")
+            print(f"[EXTRACTION] Error during knowledge extraction: {e} (after {time.time() - start_time:.2f}s)")
             # Fallback to a simple fact to ensure something is saved
             return {"facts": [{"fact": text}], "entities": [], "relationships": []}
 

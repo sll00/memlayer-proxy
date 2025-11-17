@@ -28,7 +28,7 @@ client = Gemini(
     # api_key="...",
     
     # Model selection
-    model="gemini-2.5-flash",  # Options: gemini-2.0-flash-exp, gemini-1.5-pro, gemini-1.5-flash
+    model="gemini-2.5-flash",  # Options: gemini-2.5-flash-lite, gemini-2.5-pro, gemini-2.5-flash
     
     # Standard Gemini parameters
     temperature=0.7,

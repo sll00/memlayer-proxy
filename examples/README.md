@@ -177,6 +177,45 @@ See [05_providers/README.md](05_providers/README.md) for detailed provider compa
 
 ---
 
+### 🎯 API Features (06_api/)
+Direct API usage and advanced features.
+
+**`direct_knowledge_ingestion.py`** - Direct memory updates
+```bash
+python examples/06_api/direct_knowledge_ingestion.py
+```
+- Bypass conversation loop
+- Directly ingest documents/text
+- Efficient bulk knowledge loading
+
+**`streaming_example.py`** - Streaming responses ✨ NEW
+```bash
+python examples/06_api/streaming_example.py
+```
+- Real-time response streaming
+- Works with all providers (OpenAI, Claude, Gemini, Ollama)
+- Better UX for long responses
+- Supports memory search tools
+
+Example usage:
+```python
+from memlayer.wrappers.openai import OpenAI
+
+client = OpenAI(model="gpt-4.1-mini")
+
+# Enable streaming with stream=True
+stream = client.chat(
+    messages=[{"role": "user", "content": "Tell me a story"}],
+    stream=True  # 🔥 Enable streaming
+)
+
+# Iterate over chunks as they arrive
+for chunk in stream:
+    print(chunk, end="", flush=True)
+```
+
+---
+
 ## 🎯 Use Case Guide
 
 ### "I want to build a chatbot with memory"
@@ -248,7 +287,7 @@ client = Claude(api_key="...", model="claude-3-5-sonnet-20241022")
 
 # Gemini
 from memlayer.wrappers.gemini import Gemini
-client = Gemini(api_key="...", model="gemini-2.0-flash-exp")
+client = Gemini(api_key="...", model="gemini-2.5-flash-lite")
 
 # Ollama (local)
 from memlayer.wrappers.ollama import Ollama
