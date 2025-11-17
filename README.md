@@ -1,15 +1,34 @@
-# MemLayer – The Plug-and-play persistent memory for your LLMs
+<div align="center">
 
-**The memory layer for LLMs - add persistent, intelligent memory to any LLM in minutes.**
+# Memlayer
 
-MemLayer transforms stateless LLMs into memory-enabled AI assistants that remember context across conversations, extract structured knowledge, and proactively surface relevant information when needed.
+**The plug-and-play memory layer for smart, contextual agents**
+
+Memlayer adds persistent, intelligent memory to any LLM, enabling agents that recall context across conversations, extract structured knowledge, and surface relevant information when it matters.
+
+**<100ms** Fast Search • **3 Search Tiers** • **100% Offline** Mode • **Zero Config** Required
+
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/memlayer.svg)](https://pypi.org/project/memlayer/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Downloads](https://static.pepy.tech/badge/memlayer/month)](https://pepy.tech/project/memlayer)
+[![Documentation](https://img.shields.io/badge/docs-available-brightgreen)](https://github.com/divagr18/memlayer/tree/main/docs)
+
+[Quick Start](#quick-start) • [Documentation](https://github.com/divagr18/memlayer/tree/main/docs) • [Examples](https://github.com/divagr18/memlayer/tree/main/examples) • [Twitter](https://x.com/getmemlayer)
+
+
+
+
+</div>
+
+<br/>
 
 <p align="center">
-  <img src="./memlayer.png" alt="MemLayer Overview" width="600">
+  <img src="./memlayer.png" alt="MemLayer Overview" width="700">
 </p>
+
+<br/>
 
 ## Contents
 
