@@ -14,7 +14,7 @@ Memlayer adds persistent, intelligent memory to any LLM, enabling agents that re
 [![PyPI version](https://img.shields.io/pypi/v/memlayer.svg)](https://pypi.org/project/memlayer/)
 [![Downloads](https://static.pepy.tech/badge/memlayer/month)](https://pepy.tech/project/memlayer)
 
-[Quick Start](#quick-start) • [Documentation](https://github.com/divagr18/memlayer/tree/main/docs) • [Examples](https://github.com/divagr18/memlayer/tree/main/examples) • [Twitter](https://x.com/getmemlayer)
+[Quick Start](#quick-start) • [Documentation](https://divagr18.github.io/memlayer/) • [Examples](https://github.com/divagr18/memlayer/tree/main/examples) • [Twitter](https://x.com/getmemlayer)
 
 
 
