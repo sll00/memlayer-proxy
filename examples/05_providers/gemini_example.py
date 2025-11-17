@@ -1,7 +1,7 @@
 """
 Google Gemini Provider Example
 
-Demonstrates using MemLayer with Google's Gemini models.
+Demonstrates using Memlayer with Google's Gemini models.
 Supports: gemini-2.5-flash-lite, gemini-2.5-pro, gemini-2.5-flash, etc.
 """
 
@@ -19,7 +19,7 @@ if not os.getenv("GOOGLE_API_KEY"):
     exit(1)
 
 print("="*70)
-print("MemLayer - GOOGLE GEMINI EXAMPLE")
+print("Memlayer - GOOGLE GEMINI EXAMPLE")
 print("="*70)
 
 # Initialize the memory-enhanced Gemini client
@@ -33,7 +33,7 @@ client = Gemini(
     # Standard Gemini parameters
     temperature=0.7,
     
-    # MemLayer settings
+    # Memlayer settings
     storage_path="./gemini_memories",
     user_id="demo_user",
     

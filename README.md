@@ -24,7 +24,7 @@ Memlayer adds persistent, intelligent memory to any LLM, enabling agents that re
 <br/>
 
 <p align="center">
-  <img src="./memlayer.png" alt="MemLayer Overview" width="700">
+  <img src="./memlayer.png" alt="Memlayer Overview" width="700">
 </p>
 
 <br/>
@@ -88,7 +88,7 @@ response = client.chat([
 # Response: "You work at TechCorp."
 ```
 
-That's it! MemLayer automatically:
+That's it! Memlayer automatically:
 1. ✅ Filters salient information using ML-based classification
 2. ✅ Extracts structured facts, entities, and relationships
 3. ✅ Stores memories in hybrid vector + graph storage
@@ -98,7 +98,7 @@ That's it! MemLayer automatically:
 ##  Key Concepts
 
 ### Salience Filtering
-Not all conversation content is worth storing. MemLayer uses **salience gates** to intelligently filter:
+Not all conversation content is worth storing. Memlayer uses **salience gates** to intelligently filter:
 - ✅ **Save**: Facts, preferences, user info, decisions, relationships
 - ❌ **Skip**: Greetings, acknowledgments, filler words, meta-conversation
 
@@ -116,7 +116,7 @@ After each conversation, background threads:
 
 ##  Memory Modes
 
-MemLayer offers three modes that control both **memory filtering (salience)** and **storage**:
+Memlayer offers three modes that control both **memory filtering (salience)** and **storage**:
 
 ### 1. LOCAL Mode (Default)
 ```python
@@ -159,7 +159,7 @@ LIGHTWEIGHT   <1s             Medium      Free        Graph-only
 
 ##  Search Tiers
 
-MemLayer provides three search tiers optimized for different latency requirements:
+Memlayer provides three search tiers optimized for different latency requirements:
 
 ### Fast Tier (<100ms)
 ```python
@@ -193,7 +193,7 @@ response = client.chat([{
 
 ## 🔌 Providers
 
-MemLayer works with all major LLM providers:
+Memlayer works with all major LLM providers:
 
 ### OpenAI
 ```python
@@ -254,7 +254,7 @@ client.chat([{
     "content": "Remind me to submit the report next Friday at 9am"
 }])
 
-# Later, when the task is due, MemLayer automatically injects it
+# Later, when the task is due, Memlayer automatically injects it
 response = client.chat([{"role": "user", "content": "What should I do today?"}])
 # Response includes: "Don't forget to submit the report - it's due today at 9am!"
 ```
@@ -384,7 +384,7 @@ Total (non-blocking)       ~0ms       User doesn't wait!
 ##  Documentation
 
 ### Getting Started
-- **[Basics Overview](docs/basics/overview.md)** - Architecture, components, and how MemLayer works
+- **[Basics Overview](docs/basics/overview.md)** - Architecture, components, and how Memlayer works
 - **[Quickstart Guide](docs/basics/quickstart.md)** - Get up and running in 5 minutes
 - **[Streaming Mode](docs/basics/streaming.md)** - Complete guide to streaming responses
 - **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation with all methods and parameters
@@ -489,4 +489,4 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 **Made with ❤️ for the AI community**
 
-Give your LLMs memory. Try MemLayer today! 
+Give your LLMs memory. Try Memlayer today! 

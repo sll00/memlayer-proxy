@@ -1,7 +1,7 @@
 """
 Claude (Anthropic) Provider Example
 
-Demonstrates using MemLayer with Anthropic's Claude models.
+Demonstrates using Memlayer with Anthropic's Claude models.
 Supports: claude-3-5-sonnet, claude-3-5-haiku, claude-3-opus, etc.
 """
 
@@ -15,7 +15,7 @@ if not os.getenv("ANTHROPIC_API_KEY"):
     exit(1)
 
 print("="*70)
-print("MemLayer - CLAUDE EXAMPLE")
+print("Memlayer - CLAUDE EXAMPLE")
 print("="*70)
 
 # Initialize the memory-enhanced Claude client
@@ -30,7 +30,7 @@ client = Claude(
     temperature=0.7,
     max_tokens=1024,
     
-    # MemLayer settings
+    # Memlayer settings
     storage_path="./claude_memories",
     user_id="demo_user",
     

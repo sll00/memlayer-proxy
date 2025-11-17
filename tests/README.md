@@ -1,6 +1,6 @@
 # Tests
 
-This folder contains tests, benchmarks, and debugging scripts for MemLayer.
+This folder contains tests, benchmarks, and debugging scripts for Memlayer.
 
 ## 🧪 Test Files
 

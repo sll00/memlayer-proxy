@@ -2,7 +2,7 @@
 
 ## Overview
 
-`operation_mode` is a fundamental architectural choice that determines how MemLayer computes embeddings for semantic search. This affects startup time, runtime performance, cost, resource usage, and deployment constraints.
+`operation_mode` is a fundamental architectural choice that determines how Memlayer computes embeddings for semantic search. This affects startup time, runtime performance, cost, resource usage, and deployment constraints.
 
 ```python
 from memlayer.wrappers.openai import OpenAI
@@ -41,7 +41,7 @@ User Query → Vector Search (OpenAI API) → ChromaDB Lookup → Graph Traversa
 **Architecture components:**
 ```
 ┌─────────────────────────────────────────┐
-│  MemLayer (online mode)                 │
+│  Memlayer (online mode)                 │
 ├─────────────────────────────────────────┤
 │  • ChromaStorage (vector DB)            │
 │  • NetworkX/Memgraph (graph DB)         │
@@ -87,7 +87,7 @@ User Query → Vector Search (Local Model) → ChromaDB Lookup → Graph Travers
 **Architecture components:**
 ```
 ┌─────────────────────────────────────────┐
-│  MemLayer (local mode)                  │
+│  Memlayer (local mode)                  │
 ├─────────────────────────────────────────┤
 │  • ChromaStorage (vector DB)            │
 │  • NetworkX/Memgraph (graph DB)         │
@@ -143,7 +143,7 @@ User Query → Graph Keyword Search → NetworkX Traversal → Results
 **Architecture components:**
 ```
 ┌─────────────────────────────────────────┐
-│  MemLayer (lightweight mode)            │
+│  Memlayer (lightweight mode)            │
 ├─────────────────────────────────────────┤
 │  • NetworkX/Memgraph (graph DB only)    │
 │  • Keyword-based search                 │

@@ -1,6 +1,6 @@
-# MemLayer Quickstart
+# Memlayer Quickstart
 
-Get started with MemLayer in under 5 minutes. This guide shows you how to add persistent memory to any LLM.
+Get started with Memlayer in under 5 minutes. This guide shows you how to add persistent memory to any LLM.
 
 ## Installation
 
@@ -256,7 +256,7 @@ client.chat([{"role": "user", "content": "What food do I like?"}])
 ### Conversation History Management
 
 ```python
-# MemLayer handles memory automatically, but you control conversation history
+# Memlayer handles memory automatically, but you control conversation history
 conversation = []
 
 # Turn 1

@@ -1,6 +1,6 @@
 # Provider-Specific Documentation
 
-MemLayer supports multiple LLM providers with a unified API. Each provider has specific configuration requirements and features documented here.
+Memlayer supports multiple LLM providers with a unified API. Each provider has specific configuration requirements and features documented here.
 
 ## Supported Providers
 
@@ -39,7 +39,7 @@ MemLayer supports multiple LLM providers with a unified API. Each provider has s
 
 ## Configuration Basics
 
-All providers share the same MemLayer API:
+All providers share the same Memlayer API:
 
 ```python
 from memlayer.wrappers.openai import OpenAI
@@ -120,7 +120,7 @@ Click on any provider below for detailed setup instructions:
 
 ## Related Documentation
 
-- **[Basics Overview](../basics/overview.md)**: How MemLayer works
+- **[Basics Overview](../basics/overview.md)**: How Memlayer works
 - **[Quickstart Guide](../basics/quickstart.md)**: Get started in 5 minutes
 - **[Streaming Mode](../basics/streaming.md)**: Stream responses from any provider
 - **[Operation Modes](../tuning/operation_mode.md)**: Choose online, local, or lightweight mode

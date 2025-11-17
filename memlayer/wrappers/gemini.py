@@ -123,7 +123,7 @@ class Gemini(BaseLLMWrapper):
                         properties={
                             "query": types.Schema(
                                 type=types.Type.STRING,
-                                description="A specific and detailed question or search query for the MemLayer."
+                                description="A specific and detailed question or search query for the Memlayer."
                             ),
                             "search_tier": types.Schema(
                                 type=types.Type.STRING,

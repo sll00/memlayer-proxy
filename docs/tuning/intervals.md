@@ -1,6 +1,6 @@
 # Scheduler and Curation Intervals
 
-MemLayer exposes two interval knobs to control background automation:
+Memlayer exposes two interval knobs to control background automation:
 
 - `scheduler_interval_seconds` (default: 60)
   - Controls how often the scheduler wakes up to check for due tasks/reminders.

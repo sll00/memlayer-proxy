@@ -19,7 +19,7 @@ class NetworkXStorage(BaseGraphStorage):
         self.graph: nx.DiGraph = self._load_graph()
         
         print(
-            f"MemLayer (NetworkX) initialized. "
+            f"Memlayer (NetworkX) initialized. "
             f"Loaded {self.graph.number_of_nodes()} nodes and {self.graph.number_of_edges()} edges "
             f"from: {self.graph_path}"
         )

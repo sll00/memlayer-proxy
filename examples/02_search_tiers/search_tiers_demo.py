@@ -1,8 +1,8 @@
 """
-MemLayer Search Tiers Demo
+Memlayer Search Tiers Demo
 ==============================
 
-This example demonstrates the three search tiers available in MemLayer:
+This example demonstrates the three search tiers available in Memlayer:
 1. FAST - Quick lookups with minimal latency (<100ms)
 2. BALANCED - Standard search with good performance (<500ms)
 3. DEEP - Comprehensive search with knowledge graph reasoning (<2s)
@@ -21,7 +21,7 @@ if not os.environ.get("OPENAI_API_KEY"):
     exit(1)
 
 print("=" * 70)
-print("MemLayer Search Tiers Demo")
+print("Memlayer Search Tiers Demo")
 print("=" * 70)
 
 # Initialize the client

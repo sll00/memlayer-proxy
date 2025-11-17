@@ -12,7 +12,7 @@ from .services import SchedulerService # <-- Import the new service
 import atexit
 class Memory:
     """
-    The main client for interacting with the MemLayer.
+    The main client for interacting with the Memlayer.
     """
     def __init__(self, 
                  mode: str = "embedded", 
@@ -37,7 +37,7 @@ class Memory:
         self.salience_gate = SalienceGate(threshold=salience_threshold)
 
         if mode == "embedded":
-            print(f"Initializing MemLayer in embedded mode at '{storage_path}'...")
+            print(f"Initializing Memlayer in embedded mode at '{storage_path}'...")
             # Pass the embedding model's dimension to the storage
             self.vector_storage = ChromaStorage(storage_path, dimension=self.embedding_model.dimension)
             self.graph_storage = NetworkXStorage(storage_path)
@@ -56,10 +56,10 @@ class Memory:
             raise ValueError("Invalid mode specified. Only 'embedded' is currently supported.")
     def close(self):
         """
-        Gracefully shuts down the MemLayer's background services.
+        Gracefully shuts down the Memlayer's background services.
         This is registered with atexit to be called automatically.
         """
-        print("Closing MemLayer...")
+        print("Closing Memlayer...")
         if hasattr(self, 'scheduler') and self.scheduler:
             self.scheduler.stop()
     def wrap(self, llm_client):

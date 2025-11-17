@@ -1,7 +1,7 @@
 """
 Ollama (Local) Provider Example
 
-Demonstrates using MemLayer with Ollama for local LLM inference.
+Demonstrates using Memlayer with Ollama for local LLM inference.
 Supports: llama3.2, qwen3, mistral, phi3, and any other Ollama models.
 
 Prerequisites:
@@ -13,7 +13,7 @@ Prerequisites:
 from memlayer.wrappers.ollama import Ollama
 
 print("="*70)
-print("MemLayer - OLLAMA (LOCAL) EXAMPLE")
+print("Memlayer - OLLAMA (LOCAL) EXAMPLE")
 print("="*70)
 
 # Initialize the memory-enhanced Ollama client
@@ -27,7 +27,7 @@ client = Ollama(
     # Standard Ollama parameters
     temperature=0.7,
     
-    # MemLayer settings
+    # Memlayer settings
     storage_path="./ollama_memories",
     user_id="demo_user",
     

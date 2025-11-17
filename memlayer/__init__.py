@@ -1,5 +1,5 @@
 """
-MemLayer - A lightweight memory layer for LLM applications
+Memlayer - A lightweight memory layer for LLM applications
 """
 
 __version__ = "0.1.5"

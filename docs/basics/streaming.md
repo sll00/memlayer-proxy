@@ -1,6 +1,6 @@
 # Streaming Mode
 
-MemLayer supports streaming responses from all providers (OpenAI, Claude, Gemini, Ollama). This guide explains how streaming works, its performance characteristics, and best practices.
+Memlayer supports streaming responses from all providers (OpenAI, Claude, Gemini, Ollama). This guide explains how streaming works, its performance characteristics, and best practices.
 
 ## What is Streaming?
 
@@ -87,7 +87,7 @@ for chunk in client.chat([
 
 ### Knowledge Extraction (Background)
 
-After streaming completes, MemLayer extracts knowledge in a background thread:
+After streaming completes, Memlayer extracts knowledge in a background thread:
 
 ```python
 for chunk in client.chat([

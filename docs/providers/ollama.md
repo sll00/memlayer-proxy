@@ -2,7 +2,7 @@
 
 ## Overview
 
-Ollama enables you to run LLMs locally on your machine, providing complete privacy and zero API costs. MemLayer's Ollama wrapper adds persistent memory capabilities to any Ollama-supported model.
+Ollama enables you to run LLMs locally on your machine, providing complete privacy and zero API costs. Memlayer's Ollama wrapper adds persistent memory capabilities to any Ollama-supported model.
 
 **Key Benefits:**
 - ✅ Fully offline operation (no internet required)
@@ -30,7 +30,7 @@ Download from [ollama.com/download](https://ollama.com/download)
 ollama --version
 ```
 
-### 2. Install MemLayer with Ollama Support
+### 2. Install Memlayer with Ollama Support
 
 ```bash
 pip install memlayer ollama
@@ -74,7 +74,7 @@ client = Ollama(
     operation_mode="local"  # Use local embeddings too
 )
 
-# Use like any other MemLayer client
+# Use like any other Memlayer client
 response = client.chat([
     {"role": "user", "content": "My name is Alice and I work on Project Phoenix"}
 ])
@@ -230,7 +230,7 @@ print()  # Newline after completion
 
 ## Complete Offline Setup
 
-Run MemLayer entirely offline with Ollama:
+Run Memlayer entirely offline with Ollama:
 
 ```python
 from memlayer.wrappers.ollama import Ollama
@@ -339,7 +339,7 @@ First inference loads model to memory (~2-5s). Keep Ollama running to avoid relo
 # Keep model loaded
 ollama run llama3.2
 
-# In another terminal/notebook, use MemLayer
+# In another terminal/notebook, use Memlayer
 # Model is already in memory, responses are instant
 ```
 
@@ -410,7 +410,7 @@ ollama pull llama3.2  # Automatically resumes
 ```python
 from sentence_transformers import SentenceTransformer
 model = SentenceTransformer('all-MiniLM-L6-v2')
-# Now MemLayer will find cached model
+# Now Memlayer will find cached model
 ```
 
 ---

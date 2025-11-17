@@ -26,7 +26,7 @@ class ChromaStorage:
             embedding_function=NoOpEmbeddingFunction(),
             metadata={"hnsw:space": "cosine"} # ChromaDB infers dimension from embeddings
         )
-        print(f"MemLayer (ChromaDB) initialized at: {self.db_path} for dimension {dimension}")
+        print(f"Memlayer (ChromaDB) initialized at: {self.db_path} for dimension {dimension}")
 
     def add_memory(self, content: str, embedding: List[float], user_id: str = "default_user", metadata: Dict = None):
         """Adds a new memory with initial lifecycle metadata."""

@@ -1,6 +1,6 @@
-# MemLayer Modes
+# Memlayer Modes
 
-MemLayer supports three operating modes, each optimized for different use cases.
+Memlayer supports three operating modes, each optimized for different use cases.
 
 **Key Difference:** These modes control **both salience filtering AND storage architecture**.
 

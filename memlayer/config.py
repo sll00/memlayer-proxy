@@ -1,5 +1,5 @@
 """
-Configuration settings for MemLayer.
+Configuration settings for Memlayer.
 
 This module provides global configuration for controlling behavior across the library.
 """

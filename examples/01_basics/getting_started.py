@@ -1,7 +1,7 @@
 """
 Example: Using the standalone memory-enhanced OpenAI client
 
-This demonstrates the new, simpler way to use MemLayer with OpenAI.
+This demonstrates the new, simpler way to use Memlayer with OpenAI.
 No need to create a Memory object first - just import and use!
 """
 

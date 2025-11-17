@@ -124,7 +124,7 @@ class Claude(BaseLLMWrapper):
                     "properties": {
                         "query": {
                             "type": "string",
-                            "description": "A specific and detailed question or search query for the MemLayer."
+                            "description": "A specific and detailed question or search query for the Memlayer."
                         },
                         "search_tier": {
                             "type": "string",

@@ -127,7 +127,7 @@ def main():
     print("EMBEDDING MODEL CACHE BENCHMARK")
     print("="*70)
     print("\nThis benchmark demonstrates the benefits of model caching")
-    print("when creating multiple MemLayer clients in the same process.")
+    print("when creating multiple Memlayer clients in the same process.")
     print()
     
     # Check API key
@@ -160,7 +160,7 @@ def main():
     print("✅ Subsequent clients reuse the cached model (saves ~11s each)")
     print("✅ This is especially beneficial for:")
     print("   - Multi-user applications")
-    print("   - Services with multiple MemLayer instances")
+    print("   - Services with multiple Memlayer instances")
     print("   - Testing scenarios with many clients")
     
     print("\n💡 Note: The cache persists for the lifetime of the Python process.")

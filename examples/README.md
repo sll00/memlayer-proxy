@@ -1,12 +1,12 @@
-# MemLayer Examples
+# Memlayer Examples
 
-Welcome to the MemLayer examples! This directory contains comprehensive examples organized by topic.
+Welcome to the Memlayer examples! This directory contains comprehensive examples organized by topic.
 
 ## 📁 Structure
 
 ```
 examples/
-├── 01_basics/           # Getting started with MemLayer
+├── 01_basics/           # Getting started with Memlayer
 ├── 02_search_tiers/     # Fast, Balanced, and Deep search modes
 ├── 03_features/         # Advanced features (tasks, knowledge graph)
 ├── 04_benchmarks/       # Performance comparisons
@@ -16,7 +16,7 @@ examples/
 
 ## 🚀 Quick Start
 
-### 1. Install MemLayer
+### 1. Install Memlayer
 ```bash
 pip install memlayer
 ```
@@ -44,9 +44,9 @@ python examples/01_basics/getting_started.py
 ## 📚 Examples by Category
 
 ### 🎓 Basics (01_basics/)
-Start here if you're new to MemLayer!
+Start here if you're new to Memlayer!
 
-**`getting_started.py`** - Simple introduction to MemLayer
+**`getting_started.py`** - Simple introduction to Memlayer
 - Store and retrieve memories
 - Automatic knowledge consolidation
 - Basic conversation patterns
@@ -60,7 +60,7 @@ python examples/01_basics/getting_started.py
 ### 🔍 Search Tiers (02_search_tiers/)
 Learn about the three search modes optimized for different use cases.
 
-MemLayer provides three search tiers optimized for different use cases.
+Memlayer provides three search tiers optimized for different use cases.
 
 **`fast_tier_example.py`** - Quick lookups (<100ms)
 ```bash

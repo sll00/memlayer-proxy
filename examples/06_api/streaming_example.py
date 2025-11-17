@@ -3,13 +3,13 @@ Streaming Response Example
 ===========================
 
 This example demonstrates how to use streaming mode for real-time responses
-from MemLayer-enhanced LLMs. Streaming is useful for:
+from Memlayer-enhanced LLMs. Streaming is useful for:
 
 1. Immediate user feedback (see responses as they're generated)
 2. Better UX in interactive applications
 3. Lower perceived latency
 
-All MemLayer features (memory search, consolidation, etc.) work seamlessly
+All Memlayer features (memory search, consolidation, etc.) work seamlessly
 with streaming mode.
 """
 
@@ -225,7 +225,7 @@ if __name__ == "__main__":
         sys.exit(1)
     
     print("\n" + "="*70)
-    print(" MemLayer Streaming Examples")
+    print(" Memlayer Streaming Examples")
     print("="*70 + "\n")
     
     # Run all examples

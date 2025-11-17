@@ -1,7 +1,7 @@
 """
 OpenAI Provider Example
 
-Demonstrates using MemLayer with OpenAI's GPT models.
+Demonstrates using Memlayer with OpenAI's GPT models.
 Supports: gpt-4.1, gpt-4.1, etc.
 """
 
@@ -15,7 +15,7 @@ if not os.getenv("OPENAI_API_KEY"):
     exit(1)
 
 print("="*70)
-print("MemLayer - OPENAI EXAMPLE")
+print("Memlayer - OPENAI EXAMPLE")
 print("="*70)
 
 # Initialize the memory-enhanced OpenAI client
@@ -29,7 +29,7 @@ client = OpenAI(
     # Standard OpenAI parameters
     temperature=0.7,
     
-    # MemLayer settings
+    # Memlayer settings
     storage_path="./openai_memories",
     user_id="demo_user",
     

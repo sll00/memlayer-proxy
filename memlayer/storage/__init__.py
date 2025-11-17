@@ -1,5 +1,5 @@
 """
-Storage backends for MemLayer
+Storage backends for Memlayer
 """
 
 from .chroma import ChromaStorage

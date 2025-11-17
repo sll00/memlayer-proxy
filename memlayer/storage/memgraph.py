@@ -39,7 +39,7 @@ class MemgraphStorage:
             # Test the connection with a simple query
             db.execute("RETURN 1")
             self.db = db
-            print(f"MemLayer (Memgraph) connected to {host}:{port}")
+            print(f"Memlayer (Memgraph) connected to {host}:{port}")
             
             # Create indices for better query performance
             try:

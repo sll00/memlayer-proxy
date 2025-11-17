@@ -1,5 +1,5 @@
 """
-Performance profiling script for the MemLayer system.
+Performance profiling script for the Memlayer system.
 This script profiles key operations to identify bottlenecks.
 """
 import cProfile
@@ -128,7 +128,7 @@ def main():
     cleanup()
     
     print("="*70)
-    print("MemLayer PERFORMANCE PROFILING")
+    print("Memlayer PERFORMANCE PROFILING")
     print("="*70)
     print("This will profile key operations to identify bottlenecks.")
     print()

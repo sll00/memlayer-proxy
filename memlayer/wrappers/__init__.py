@@ -1,5 +1,5 @@
 """
-LLM client wrappers for MemLayer
+LLM client wrappers for Memlayer
 """
 
 # Lazy imports for fast package loading

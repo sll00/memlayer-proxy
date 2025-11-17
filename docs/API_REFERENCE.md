@@ -1,4 +1,4 @@
-# MemLayer API Reference
+# Memlayer API Reference
 
 Complete reference for all public methods and their parameters.
 
@@ -468,7 +468,7 @@ messages = [
 
 ## Tool Schema
 
-MemLayer automatically provides these tools to the LLM:
+Memlayer automatically provides these tools to the LLM:
 
 ### `search_memory`
 
@@ -488,14 +488,14 @@ The LLM calls these tools automatically when needed - no manual configuration re
 
 ## Configuration Classes
 
-### `MemLayerConfig`
+### `MemlayerConfig`
 
 Central configuration object (advanced usage).
 
 ```python
-from memlayer.config import MemLayerConfig
+from memlayer.config import MemlayerConfig
 
-config = MemLayerConfig(
+config = MemlayerConfig(
     operation_mode="online",
     salience_threshold=0.5,
     embedding_model="text-embedding-3-small"

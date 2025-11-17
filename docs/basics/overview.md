@@ -1,8 +1,8 @@
-# MemLayer Overview
+# Memlayer Overview
 
-## What is MemLayer?
+## What is Memlayer?
 
-MemLayer is a memory-enhanced LLM wrapper that automatically builds and maintains a persistent knowledge graph from your conversations. It adds memory capabilities to any LLM provider (OpenAI, Claude, Gemini, Ollama) without changing how you interact with them.
+Memlayer is a memory-enhanced LLM wrapper that automatically builds and maintains a persistent knowledge graph from your conversations. It adds memory capabilities to any LLM provider (OpenAI, Claude, Gemini, Ollama) without changing how you interact with them.
 
 ## Core Architecture
 
@@ -15,7 +15,7 @@ MemLayer is a memory-enhanced LLM wrapper that automatically builds and maintain
                          │
                          ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                  MemLayer Client                             │
+│                  Memlayer Client                             │
 │  (OpenAI / Claude / Gemini / Ollama wrapper)                │
 └─────┬──────────────────┬──────────────────┬─────────────────┘
       │                  │                  │
@@ -39,7 +39,7 @@ MemLayer is a memory-enhanced LLM wrapper that automatically builds and maintain
 
 ### How It Works
 
-1. **Chat Flow**: When you send a message via `.chat()`, MemLayer:
+1. **Chat Flow**: When you send a message via `.chat()`, Memlayer:
    - Searches the knowledge graph for relevant context
    - Injects that context into the LLM prompt via tool calls
    - Returns the LLM's response to you
