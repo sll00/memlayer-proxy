@@ -78,7 +78,7 @@ from memlayer.wrappers.gemini import Gemini
 
 client = Gemini(
     api_key="your-gemini-api-key",
-    model="gemini-2.0-flash-exp",
+    model="gemini-2.5-flash",
     user_id="alice"
 )
 

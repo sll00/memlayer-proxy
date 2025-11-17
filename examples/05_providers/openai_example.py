@@ -2,7 +2,7 @@
 OpenAI Provider Example
 
 Demonstrates using MemLayer with OpenAI's GPT models.
-Supports: gpt-4, gpt-4-turbo, gpt-4.1, gpt-3.5-turbo, etc.
+Supports: gpt-4.1, gpt-4.1, etc.
 """
 
 from memlayer.wrappers.openai import OpenAI
@@ -24,7 +24,7 @@ client = OpenAI(
     # api_key="sk-...",
     
     # Model selection
-    model="gpt-4.1-mini",  # Options: gpt-4, gpt-4-turbo, gpt-4.1, gpt-3.5-turbo
+    model="gpt-4.1-mini", 
     
     # Standard OpenAI parameters
     temperature=0.7,

@@ -5,19 +5,19 @@ MemLayer supports multiple LLM providers with a unified API. Each provider has s
 ## Supported Providers
 
 ### [OpenAI](./openai.md)
-- **Models**: GPT-4, GPT-4 Turbo, GPT-3.5
+- **Models**: GPT-4.1, GPT 5 etc
 - **Streaming**: ✅ Full support
 - **Best for**: Production applications, fastest API responses
 - **Setup**: Requires `OPENAI_API_KEY` environment variable
 
 ### [Anthropic Claude](./claude.md)
-- **Models**: Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku
+- **Models**: Claude 4.5 Sonnet, Claude 4 Opus, Claude 4 Haiku
 - **Streaming**: ✅ Full support
 - **Best for**: Long conversations, complex reasoning
 - **Setup**: Requires `ANTHROPIC_API_KEY` environment variable
 
 ### [Google Gemini](./gemini.md)
-- **Models**: Gemini 2.0 Flash, Gemini 1.5 Pro
+- **Models**: Gemini 2.5 Flash, Gemini 2.5 Pro
 - **Streaming**: ✅ Full support
 - **Best for**: Multimodal applications, cost efficiency
 - **Setup**: Requires `GOOGLE_API_KEY` environment variable
@@ -64,7 +64,7 @@ client = Claude(
 # Gemini
 client = Gemini(
     api_key="your-key",
-    model="gemini-2.0-flash-exp",
+    model="gemini-2.5-flash",
     user_id="alice"
 )
 

@@ -43,7 +43,7 @@ for chunk in client.chat(
 ```python
 from memlayer.wrappers.gemini import Gemini
 
-client = Gemini(model="gemini-2.0-flash-exp", user_id="alice")
+client = Gemini(model="gemini-2.5-flash", user_id="alice")
 
 for chunk in client.chat(
     [{"role": "user", "content": "What is a neural network?"}],

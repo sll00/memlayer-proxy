@@ -68,7 +68,7 @@ class OpenAI(BaseLLMWrapper):
         
         Args:
             api_key: OpenAI API key (if None, will use OPENAI_API_KEY env var)
-            model: Model name to use (e.g., "gpt-4", "gpt-4.1-mini", "gpt-3.5-turbo")
+            model: Model name to use (e.g., "gpt-4.1", "gpt-4.1-mini")
             temperature: Sampling temperature (0.0 to 2.0)
             storage_path: Path where memories will be stored
             user_id: Unique identifier for the user
