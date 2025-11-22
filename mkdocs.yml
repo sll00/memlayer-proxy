@@ -24,10 +24,22 @@ theme:
     - navigation.indexes
     - search.suggest
     - search.highlight
-
+  meta:
+    - name: title
+      content: Memlayer – The plug-and-play memory layer for smart, contextual agents
+    - name: description
+      content: Memlayer is an open-source memory layer for local LLMs and agents — fast, persistent, embedding-based long-term memory with easy Python API.
+    - name: keywords
+      content: memlayer, llm memory, vector store, agent memory, knowledge graph, embeddings, open source
+    - property: "og:title"
+      content: Memlayer – Memory layer for LLMs and agents
+    - property: "og:description"
+      content: Persistent long-term memory, multi-tier retrieval, noise-aware gating, and <100ms search.
 docs_dir: docs
 
 nav:
+  - Home: index.md
+
   - Overview:
       - API Reference: API_REFERENCE.md
 

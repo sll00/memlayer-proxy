@@ -1,12 +1,21 @@
 # Memlayer
 
-**The plug-and-play memory layer for smart, contextual agents**
+> The plug-and-play memory layer for smart, contextual agents
 
 Memlayer adds persistent, intelligent memory to any LLM, enabling agents that recall context across conversations, extract structured knowledge, and surface relevant information when it matters.
 
 **<100ms Fast Search • Noise-Aware Memory Gate • Multi-Tier Retrieval Modes • 100% Local • Zero Config**
 
----
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![PyPI version](https://img.shields.io/pypi/v/memlayer.svg)](https://pypi.org/project/memlayer/)
+[![Downloads](https://static.pepy.tech/badge/memlayer/month)](https://pepy.tech/project/memlayer)
+    
+
+###  Links
+- **GitHub:** [github.com/divagr18/memlayer](https://github.com/divagr18/memlayer)
+- **PyPI:** [pypi.org/project/memlayer](https://pypi.org/project/memlayer/)
+
 
 ## Quick start
 
