@@ -280,7 +280,7 @@ Run Memlayer as an **OpenAI-compatible reverse proxy** - add memory to any OpenA
 pip install memlayer[server]
 
 # Start llama-server (llama.cpp)
-./llama-server -m model.gguf --port 8080 --chat-template llama3
+./llama-server -m model.gguf --port 8080 --chat-template llama3 --jinja
 
 # Start Memlayer proxy
 python -m memlayer.server

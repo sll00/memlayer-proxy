@@ -6,13 +6,13 @@ Demonstrates using Memlayer with llama-server for local LLM inference.
 
 Prerequisites:
 1. Install llama.cpp and build llama-server:
-   git clone https://github.com/ggerganov/llama.cpp
+   git clone https://github.com/ggml-org/llama.cpp
    cd llama.cpp && make llama-server
 
 2. Download a GGUF model (e.g., from Hugging Face)
 
 3. Start llama-server with function calling support:
-   ./llama-server -m model.gguf --port 8080 -ngl 99 --chat-template llama3
+   ./llama-server -m model.gguf --port 8080 -ngl 99 --chat-template llama3 --jinja
 
 Note: llama-server is OpenAI-compatible and runs completely offline!
 """
@@ -125,10 +125,10 @@ print("  - GPU acceleration via -ngl flag")
 print("  - Supports jinja chat templates for tool calling")
 print("  - Perfect for privacy-sensitive applications")
 print("\n📦 Quick llama-server Setup:")
-print("  1. Clone: git clone https://github.com/ggerganov/llama.cpp")
+print("  1. Clone: git clone https://github.com/ggml-org/llama.cpp")
 print("  2. Build: cd llama.cpp && make llama-server")
 print("  3. Download GGUF model from Hugging Face")
-print("  4. Start: ./llama-server -m model.gguf --port 8080 --chat-template llama3")
+print("  4. Start: ./llama-server -m model.gguf --port 8080 --chat-template llama3 --jinja")
 print("  5. Run this script with python3.12!")
 
 # Cleanup

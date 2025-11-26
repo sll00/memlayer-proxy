@@ -5,7 +5,7 @@ This demonstrates how to use any OpenAI-compatible client with Memlayer proxy,
 getting automatic memory capabilities without changing your code.
 
 Prerequisites:
-1. Start llama-server: ./llama-server -m model.gguf --port 8080 --chat-template llama3
+1. Start llama-server: ./llama-server -m model.gguf --port 8080 --chat-template llama3 --jinja
 2. Start Memlayer proxy: python3.12 -m memlayer.server
 3. Run this script: python3.12 examples/07_server/test_client.py
 """

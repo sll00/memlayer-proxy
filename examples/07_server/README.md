@@ -19,7 +19,7 @@ Memlayer Server is a FastAPI-based reverse proxy that adds persistent memory cap
 
 1. **Install llama.cpp and build llama-server**:
    ```bash
-   git clone https://github.com/ggerganov/llama.cpp
+   git clone https://github.com/ggml-org/llama.cpp
    cd llama.cpp
    make llama-server
    ```
@@ -28,7 +28,7 @@ Memlayer Server is a FastAPI-based reverse proxy that adds persistent memory cap
 
 3. **Start llama-server with function calling support**:
    ```bash
-   ./llama-server -m /path/to/model.gguf --port 8080 -ngl 99 --chat-template llama3
+   ./llama-server -m /path/to/model.gguf --port 8080 -ngl 99 --chat-template llama3 --jinja
    ```
 
 4. **Install Memlayer with server dependencies**:
@@ -318,7 +318,7 @@ for chunk in stream:
 
 ### Tool calling not working
 
-- **Ensure llama-server supports function calling**: Use `--chat-template` flag
+- **Ensure llama-server supports function calling**: Use `--chat-template` and `--jinja` flags
 - **Check model supports function calling**: Not all models do
 - **Try explicit system prompts** if model doesn't have native support
 
