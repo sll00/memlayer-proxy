@@ -116,3 +116,5 @@ tmp/
 # Release artifacts
 RELEASE_CHECKLIST.md
 memlayer_data/
+opencode-plugin/
+OPENCODE_SETUP.md
