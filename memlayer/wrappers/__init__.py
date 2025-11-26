@@ -19,6 +19,9 @@ def __getattr__(name):
     elif name == "Ollama":
         from .ollama import Ollama
         return Ollama
+    elif name == "LlamaServer":
+        from .llama_server import LlamaServer
+        return LlamaServer
     elif name == "OpenAIWrapper":
         from .openai import OpenAIWrapper
         return OpenAIWrapper
@@ -37,8 +40,9 @@ __all__ = [
     "OpenAI",  # New standalone class
     "Claude",  # New standalone class
     "Gemini",  # New standalone class
-    "Ollama",
+    "Ollama",  # New standalone class
     "LMStudio",  # New standalone class
+    "LlamaServer",  # New standalone class (offline-first)
     "OpenAIWrapper",  # Legacy wrapper
     "ClaudeWrapper",  # Legacy wrapper
     "GeminiWrapper",  # Legacy wrapper
