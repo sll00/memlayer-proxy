@@ -252,7 +252,77 @@ client = LMStudio(
 )
 ```
 
+### llama-server (Local, 100% Offline)
+```python
+from memlayer.wrappers.llama_server import LlamaServer
+
+client = LlamaServer(
+    host="http://localhost:8080",
+    model="qwen2.5:7b",  # Your GGUF model
+    storage_path="./memories",
+    user_id="user_123"
+    # Always uses local embeddings - 100% offline!
+)
+```
+
 **All providers share the same API** - switch between them seamlessly!
+
+---
+
+## 🌐 Reverse Proxy Server
+
+Run Memlayer as an **OpenAI-compatible reverse proxy** - add memory to any OpenAI-compatible client with zero code changes!
+
+### Start the Server
+
+```bash
+# Install server dependencies
+pip install memlayer[server]
+
+# Start llama-server (llama.cpp)
+./llama-server -m model.gguf --port 8080 --chat-template llama3
+
+# Start Memlayer proxy
+python -m memlayer.server
+```
+
+### Use with Any OpenAI Client
+
+```python
+from openai import OpenAI
+
+# Point to Memlayer proxy instead of OpenAI
+client = OpenAI(
+    base_url="http://localhost:8000/v1",
+    api_key="not-needed"  # No API key required
+)
+
+# Use exactly like OpenAI - but with memory!
+response = client.chat.completions.create(
+    model="qwen2.5:7b",
+    messages=[{"role": "user", "content": "My name is Alice"}]
+)
+
+# Later conversation - memory is automatically retrieved
+response = client.chat.completions.create(
+    model="qwen2.5:7b",
+    messages=[{"role": "user", "content": "What's my name?"}]
+)
+# Response: "Your name is Alice."
+```
+
+### Features
+
+- ✅ **Drop-in replacement** for OpenAI API
+- ✅ **Multi-user support** via `X-User-ID` header
+- ✅ **100% offline** operation (local embeddings)
+- ✅ **Streaming support** (SSE)
+- ✅ **Zero code changes** required in your client
+- ✅ **Works with any** OpenAI-compatible tool/framework
+
+See [examples/07_server/README.md](examples/07_server/README.md) for full documentation.
+
+---
 
 ##  Advanced Features
 
