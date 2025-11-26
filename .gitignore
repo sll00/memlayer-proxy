@@ -115,3 +115,4 @@ tmp/
 *.old
 # Release artifacts
 RELEASE_CHECKLIST.md
+memlayer_data/
