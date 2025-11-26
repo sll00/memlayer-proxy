@@ -265,7 +265,7 @@ class ConsolidationService:
     embedding model and LLM provider used for fact extraction.
     Supports LIGHTWEIGHT mode (graph-only, no vectors).
     """
-    def __init__(self, vector_storage: Optional[ChromaStorage], graph_storage: MemgraphStorage, embedding_model: Optional[BaseEmbeddingModel], salience_gate: SalienceGate, llm_client: BaseLLMWrapper):
+    def __init__(self, vector_storage: Optional[ChromaStorage], graph_storage: MemgraphStorage, embedding_model: Optional[BaseEmbeddingModel], salience_gate: SalienceGate, llm_client: BaseLLMWrapper, max_concurrent_consolidations: int = 2):
         self.storage = vector_storage
         self.graph_storage = graph_storage
         self.embedding_model = embedding_model
@@ -274,6 +274,11 @@ class ConsolidationService:
         self.is_lightweight = (vector_storage is None or embedding_model is None)
         self._consolidation_complete = threading.Event()
         self._consolidation_complete.set()  # Initially set (no consolidation in progress)
+
+        # Throttling: Limit concurrent consolidations to avoid saturating llama-server
+        self._consolidation_semaphore = threading.Semaphore(max_concurrent_consolidations)
+        self._active_consolidations = 0
+        self._consolidation_lock = threading.Lock()
 
     def consolidate(self, conversation_text: str, user_id: str):
         """
@@ -288,24 +293,41 @@ class ConsolidationService:
         self._consolidation_complete.clear()
         
         def _task():
+            # Try to acquire semaphore (non-blocking)
+            if not self._consolidation_semaphore.acquire(blocking=False):
+                with self._consolidation_lock:
+                    print(f"[CONSOLIDATE] Throttle limit reached ({self._active_consolidations} active), skipping consolidation for user '{user_id}'")
+                self._consolidation_complete.set()
+                return
+
+            # Track active consolidations
+            with self._consolidation_lock:
+                self._active_consolidations += 1
+                print(f"[CONSOLIDATE] Starting consolidation ({self._active_consolidations} active)")
+
             task_start = time.time()
             if is_debug_mode():
                 print(f"[DEBUG] Background consolidation thread started for user '{user_id}'")
-            
+
             # *** Salience check happens INSIDE the background thread ***
             # This prevents blocking the main thread with API calls
             if is_debug_mode():
                 print(f"[DEBUG] Checking salience for user '{user_id}'")
-            
+
             salience_start = time.time()
             is_salient = self.salience_gate.is_worth_saving(conversation_text)
             salience_elapsed = time.time() - salience_start
             print(f"[CONSOLIDATE] Salience check took {salience_elapsed:.2f}s, result: {is_salient}")
-            
+
             if not is_salient:
                 if is_debug_mode():
                     print(f"[DEBUG] Conversation not salient. Exiting consolidation thread.")
                 self._consolidation_complete.set()
+
+                # Release semaphore before early exit
+                with self._consolidation_lock:
+                    self._active_consolidations -= 1
+                self._consolidation_semaphore.release()
                 return  # Exit thread early
             
             print(f"Consolidating knowledge for user '{user_id}'...")
@@ -408,6 +430,12 @@ class ConsolidationService:
             finally:
                 # Always mark consolidation as complete (even if error occurred)
                 self._consolidation_complete.set()
+
+                # Release semaphore and update counter
+                with self._consolidation_lock:
+                    self._active_consolidations -= 1
+                    print(f"[CONSOLIDATE] Consolidation finished ({self._active_consolidations} still active)")
+                self._consolidation_semaphore.release()
         
         # Start the consolidation task in a background thread
         thread = threading.Thread(target=_task, daemon=True)
